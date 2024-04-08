@@ -1,0 +1,45 @@
+<RCC>
+    <qresource prefix="/">
+        <file>lianliankan/basic_help.bmp</file>
+        <file>lianliankan/bg_m0ain.bmp</file>
+        <file>lianliankan/bg_main.bmp</file>
+        <file>lianliankan/fruit_b0g.bmp</file>
+        <file>lianliankan/fruit_bg.bmp</file>
+        <file>lianliankan/fruit_element.bmp</file>
+        <file>lianliankan/fruit_mask.bmp</file>
+        <file>lianliankan/fruit_pause.bmp</file>
+        <file>lianliankan/fruit_pause2.bmp</file>
+        <file>lianliankan/LLK.ico</file>
+        <file>lianliankan/LLK.rc2</file>
+        <file>lianliankan/LLK1.png</file>
+        <file>lianliankan/fruit1.bmp</file>
+        <file>lianliankan/fruit2.bmp</file>
+        <file>lianliankan/fruit3.bmp</file>
+        <file>lianliankan/fruit4.bmp</file>
+        <file>lianliankan/fruit5.bmp</file>
+        <file>lianliankan/fruit6.bmp</file>
+        <file>lianliankan/fruit7.bmp</file>
+        <file>lianliankan/fruit8.bmp</file>
+        <file>lianliankan/fruit9.bmp</file>
+        <file>lianliankan/fruit10.bmp</file>
+        <file>lianliankan/fruit12.bmp</file>
+        <file>lianliankan/fruit13.bmp</file>
+        <file>lianliankan/fruit14.bmp</file>
+        <file>lianliankan/fruit15.bmp</file>
+        <file>lianliankan/fruit16.bmp</file>
+        <file>lianliankan/fruit17.bmp</file>
+        <file>lianliankan/fruit18.bmp</file>
+        <file>lianliankan/fruit19.bmp</file>
+        <file>lianliankan/fruit20.bmp</file>
+        <file>lianliankan/fruit11.bmp</file>
+        <file>lianliankan/fruit_mask1.bmp</file>
+        <file>lianliankan/fruit_mask2.bmp</file>
+        <file>lianliankan/fruit_mask3.bmp</file>
+        <file>lianliankan/fruit_mask4.bmp</file>
+        <file>lianliankan/fruit_mask5.bmp</file>
+        <file>lianliankan/fruit_mask6.bmp</file>
+        <file>lianliankan/fruit_mask7.bmp</file>
+        <file>lianliankan/1.mp3</file>
+        <file>lianliankan/2.mp3</file>
+    </qresource>
+</RCC>
