@@ -1,6 +1,6 @@
 #include "gamescene.h"
 #include "./ui_gamescene.h"
-#include "CGameMap.h"
+#include "CGameGraph.h"
 #include "settingwidget.h"
 #include "Global.h"
 #include <QPainter>
@@ -13,10 +13,6 @@
 #include <QGridLayout>
 #include <QMediaPlayer>
 #include <QAudioOutput>
-#include <QDebug>
-#include <iostream>
-using namespace std;
-
 
 gameScene::gameScene(QWidget *parent)
     : QMainWindow{parent}
@@ -35,6 +31,7 @@ gameScene::gameScene(QWidget *parent)
     });
     //返回主界面
     connect(ui->backButton,&QPushButton::clicked,this,[=](){
+        backgroundPlayer->stop();
         emit this->back();
     });
     //倒计时的标签
@@ -67,14 +64,15 @@ gameScene::gameScene(QWidget *parent)
         // 如果倒计时完成，停止定时器
         if (remainingTime <= 0) {
             timer->stop();
-            QMessageBox::warning(this,"Game Over",tr("游戏挑战失败!"));
             backgroundPlayer->stop();
             enableLabelClicking(false);
+            failPlayer->play();
+            QMessageBox::warning(this,"Game Over",tr("游戏挑战失败!"));
         }
     });
 
     //创建地图
-    GameMap = InitMap();
+    GraphMap = InitMap();
     //开始刷新游戏地图
     StartGame();
     //地图禁止点击
@@ -84,7 +82,7 @@ gameScene::gameScene(QWidget *parent)
     //提示按钮
     connect(ui->tipButton,&QPushButton::clicked,this,[=](){
         Vertex *vertex1;
-        vertex1 = vertex(GameMap);
+        vertex1 = vertex(GraphMap);
         getLabel(vertex1[0].row,vertex1[0].col);
         getLabel(vertex1[1].row,vertex1[1].col);
         QMessageBox::information(this,"提示","第"+QString::number(vertex1[0].row+1)+"行，"+QString::number(vertex1[0].col+1)+"列与第"+QString::number(vertex1[1].row+1)+"行，"+QString::number(vertex1[1].col+1)+"列可以相消");
@@ -100,14 +98,24 @@ gameScene::gameScene(QWidget *parent)
     // 创建 QMediaPlayer 对象并加载音效文件
     soundEffectPlayer = new QMediaPlayer(this);
     backgroundPlayer = new QMediaPlayer(this);
+    victoryPlayer = new QMediaPlayer(this);
+    failPlayer = new QMediaPlayer(this);
     seaudioOutput = new QAudioOutput(this);
     bgaudioOutput = new QAudioOutput(this);
+    victoryAudioOutput = new QAudioOutput(this);
+    failAudioOutput = new QAudioOutput(this);
     seaudioOutput->setVolume(0.5);
     bgaudioOutput->setVolume(0.5);
+    victoryAudioOutput->setVolume(0.5);
+    failAudioOutput->setVolume(0.5);
     soundEffectPlayer->setAudioOutput(seaudioOutput);
     backgroundPlayer->setAudioOutput(bgaudioOutput);
+    victoryPlayer->setAudioOutput(victoryAudioOutput);
+    failPlayer->setAudioOutput(failAudioOutput);
     soundEffectPlayer->setSource(QUrl("C:/Users/yangtao/Desktop/lianliankan/1.mp3"));
     backgroundPlayer->setSource(QUrl("C:/Users/yangtao/Desktop/lianliankan/2.mp3"));
+    victoryPlayer->setSource(QUrl("C:/Users/yangtao/Desktop/lianliankan/v.mp3"));
+    failPlayer->setSource(QUrl("C:/Users/yangtao/Desktop/lianliankan/f.mp3"));
     backgroundPlayer->play();
     backgroundPlayer->setLoops(-1);
 
@@ -140,9 +148,9 @@ void gameScene::StartGame() {
     QSize labelSize(40, 40); // 假设标签大小为40x540
     for (int row = 0; row < 10; ++row) {
         for (int col = 0; col < 16; ++col) {
-            ClickableLabel *label = new ClickableLabel(QString::number(GameMap[row][col] + 1),row,col,ui->gameArea);
-            QString finPath = imagePath + QString::number(GameMap[row][col] + 1) + ".bmp";
-            QImage image = picture(finPath);
+            ClickableLabel *label = new ClickableLabel(QString::number(GraphMap->vex[row*16+col].info + 1),row,col,ui->gameArea);
+            QString finPath = imagePath + QString::number(GraphMap->vex[row*16+col].info + 1) + ".bmp";
+            QImage image = picture1(finPath);
             QPixmap pixmap = QPixmap::fromImage(image);
             label->setPixmap(pixmap);
             label->setFixedSize(labelSize); // 设置标签的固定大小
@@ -152,6 +160,7 @@ void gameScene::StartGame() {
         }
     }
     // 设置布局
+    GraphMap = GraphLink(GraphMap);
     ui->gameArea->setLayout(layout);
 }
 //点击标签槽函数
@@ -184,22 +193,24 @@ void gameScene::onLabelClicked(int row, int col, const QString &text) {
 void gameScene::compareLabels(Vertex &v1,Vertex &v2) {
     qDebug()<<v1.row<<" "<<v1.col<<" "<<v1.info;
     qDebug()<<v2.row<<" "<<v2.col<<" "<<v2.info;
-    if(IsLink(GameMap,v1,v2)&&v1.info==v2.info){
-        GameMap[v1.row][v1.col] = -1;
-        GameMap[v2.row][v2.col] = -1;
+    if(GraphMap->GraphMap[v1.row*16+v1.col][v2.row*16+v2.col]&&v1.info==v2.info){
+        GraphMap->vex[v1.row*16+v1.col].info = -1;
+        GraphMap->vex[v2.row*16+v2.col].info = -1;
         soundEffectPlayer->play();
     }
-    if(gameOver(GameMap)){
-        QMessageBox::warning(this,"Game Over","游戏挑战成功!");
+    StartGame();
+    if(gameOver(GraphMap)){
         backgroundPlayer->stop();
         timer->stop();
+        victoryPlayer->play();
+        QMessageBox::warning(this,"Game Over","游戏挑战成功!");
     }
-    StartGame();
 }
 //重排函数
 void gameScene::reset_ui() {
-    GameMap = reset(GameMap);
+    GraphMap = reset(GraphMap);
     StartGame();
+    enableLabelClicking(false);
 }
 //判断游戏是否开始和暂停
 void gameScene::enableLabelClicking(bool enable) {
@@ -232,14 +243,16 @@ void gameScene::getLabel(const int row, const int col) {
 //背景音乐
 void gameScene::updateBackgroundVolume(int volume) {
     qDebug()<<volume;
-    qreal value = volume/100;
-    bgaudioOutput->setVolume(value);
+    qreal volumeLevel = static_cast<qreal>(volume) / 100.0;
+    bgaudioOutput->setVolume(volumeLevel);
 }
 //游戏音效
 void gameScene::updateSoundEffectVolume(int volume) {
     qDebug()<<volume;
-    qreal value = volume/100;
-    seaudioOutput->setVolume(value);
+    qreal volumeLevel = static_cast<qreal>(volume) / 100.0;
+    seaudioOutput->setVolume(volumeLevel);
+    victoryAudioOutput->setVolume(volumeLevel);
+    failAudioOutput->setVolume(volumeLevel);
 }
 
 //析构函数

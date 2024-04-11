@@ -3,6 +3,7 @@
 #include "helpscene.h"
 #include "Global.h"
 #include "settingwidget.h"
+#include "CGameGraph.h"
 #include <QMainWindow>
 #include <QImage>
 #include <QString>
@@ -15,6 +16,8 @@
 #include <QGridLayout>
 #include <QMediaPlayer>
 #include <QAudioOutput>
+#include <QTimer>
+#include <QMessageBox>
 QT_BEGIN_NAMESPACE
 namespace Ui {
 class gameScene;
@@ -53,6 +56,30 @@ public:
     void compareLabels(Vertex &v1,Vertex &v2);
     //获取标签
     void getLabel(const int row,const int col);
+    //一键胜利，失败
+    void keyReleaseEvent(QKeyEvent *event) override {
+        if(event->key() == Qt::Key_V) {
+            qDebug() << "Escape key released";
+            // 这里可以添加处理逻辑
+            for(int i=0;i<10;i++){
+                for(int j=0;j<16;j++){
+                    GraphMap->vex[i*16+j].info=-1;
+                }
+            }
+            StartGame();
+            if(gameOver(GraphMap)){
+                backgroundPlayer->stop();
+                timer->stop();
+                victoryPlayer->play();
+                QMessageBox::warning(this,"Game Over","游戏挑战成功!");
+            }
+        }
+        if(event->key() == Qt::Key_F){
+            remainingTime = 1;
+        }
+        // 调用父类的键盘释放事件处理方法
+        QWidget::keyReleaseEvent(event);
+    }
 
 
 
@@ -63,13 +90,17 @@ private:
     SettingWidget *settingWidget = nullptr;
     int remainingTime;
     QTimer *timer;
-    int **GameMap;
+    AMGraph *GraphMap;
     QGridLayout *layout;
     QVector<Vertex> selectedVertices; // 保存选定的两个顶点信息
     QMediaPlayer *soundEffectPlayer;
     QMediaPlayer *backgroundPlayer;
+    QMediaPlayer *victoryPlayer;
+    QMediaPlayer *failPlayer;
     QAudioOutput *seaudioOutput;
     QAudioOutput *bgaudioOutput;
+    QAudioOutput *victoryAudioOutput;
+    QAudioOutput *failAudioOutput;
 
 
 signals:

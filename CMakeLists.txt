@@ -20,13 +20,12 @@ set(PROJECT_SOURCES
         mainscene.cpp
         mainscene.h
         mainscene.ui
-        CGameMap.cpp
-        CGameMap.h
-        CGameMap.h
         Global.h
         settingwidget.cpp
         settingwidget.h
         settingwidget.ui
+        CGameGraph.cpp
+        CGameGraph.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

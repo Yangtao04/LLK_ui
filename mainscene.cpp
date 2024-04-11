@@ -1,5 +1,6 @@
 #include "mainscene.h"
 #include "./ui_mainscene.h"
+#include "settingwidget.h"
 #include <QIcon>
 #include <QPainter>
 #include <QLabel>
@@ -23,18 +24,29 @@ MainScene::MainScene(QWidget *parent)
 
     //点击基本模式按钮，切换窗口
     connect(ui->baseButton,&QPushButton::clicked,this,[=](){
+        backgroundPlayer->stop();
         basegame = new gameScene(this);
         basegame->show();
         //监听基本模式返回按钮
         connect(basegame,&gameScene::back,this,[=](){
-            basegame->hide();
+            basegame->close();
+            backgroundPlayer->play();
         });
     });
 
-
-
-
-
+    backgroundPlayer = new QMediaPlayer(this);
+    bgAudioOutput = new QAudioOutput(this);
+    bgAudioOutput->setVolume(0.5);
+    backgroundPlayer->setAudioOutput(bgAudioOutput);
+    backgroundPlayer->setSource(QUrl("C:/Users/yangtao/Desktop/lianliankan/4.mp3"));
+    backgroundPlayer->play();
+    backgroundPlayer->setLoops(-1);
+    settingWidget = new SettingWidget;
+    connect(ui->settingButton,&QPushButton::clicked,this,[=](){
+        settingWidget->show();
+    });
+    connect(settingWidget,&SettingWidget::backgroundVolumeChanged,this,&MainScene::updateBackgroundVolume);
+    //设置按钮
 }
 
 void MainScene::paintEvent(QPaintEvent *){
@@ -44,7 +56,11 @@ void MainScene::paintEvent(QPaintEvent *){
     painter.drawPixmap(0,0,this->width(),this->height(),pix);
 }
 
-
+void MainScene::updateBackgroundVolume(int volume) {
+    qDebug()<<volume;
+    qreal volumeLevel = static_cast<qreal>(volume) / 100.0;
+    bgAudioOutput->setVolume(volumeLevel);
+}
 
 
 MainScene::~MainScene()
